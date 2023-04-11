@@ -37,8 +37,6 @@ from
 where
     year(cast(LEFT(datetime, 10) as date)) = 2021;
 
-
-
 ----------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------------
@@ -166,8 +164,64 @@ select
     a.q4
 from
     transpose a
-    left join mydatabase.departments b on a.department_id = b.id
-    left join mydatabase.jobs c on a.job_id = c.id
+    left join mydatabase.departments b on a.department_id = IFNULL(b.id, 0)
+    left join mydatabase.jobs c on a.job_id = IFNULL(c.id, 0)
 order by
     IFNULL(b.department, 'NA'),
     IFNULL(c.job, 'NA');
+
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------NUMBER 2-------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+with adaptation as (
+    select
+        id,
+        MONTH(datetime) as month,
+        IFNULL(department_id, 0) as department_id,
+        IFNULL(job_id, 0) as job_id
+    from
+        mydatabase.hired_employees_mod
+),
+conteos as (
+    select
+        department_id,
+        count(*) as conteo
+    from
+        adaptation
+    group by
+        1
+),
+promedio as (
+    select
+        avg(conteo) as prom
+    from
+        conteos
+),
+conditions as (
+    select
+        a.*
+    from
+        conteos a
+    where
+        conteo > (
+            select
+                prom
+            from
+                promedio
+        )
+)
+select
+    a.department_id as id,
+    IFNULL(b.department, 'NA') as department,
+    conteo as hired
+from
+    conditions a
+    left join mydatabase.departments b on a.department_id = IFNULL(b.id, 0)
+order by
+    conteo desc
