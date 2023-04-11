@@ -1,2 +1,2 @@
-# poc_globant_2
+# PoC_globant_2
 Challenge #2
