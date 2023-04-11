@@ -37,6 +37,17 @@ from
 where
     year(cast(LEFT(datetime, 10) as date)) = 2021;
 
+
+
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+-------------------------------------------------------NUMBER 1-------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------
 with adaptation as (
     select
         id,
@@ -99,7 +110,64 @@ sums as (
         1,
         2,
         3
+),
+transpose as (
+    select
+        a.*,
+        IFNULL(b.total, 0) as q1,
+        IFNULL(c.total, 0) as q2,
+        IFNULL(d.total, 0) as q3,
+        IFNULL(e.total, 0) as q4
+    from
+        distincts a
+        left join (
+            select
+                *
+            from
+                sums
+            where
+                qtr = 1
+        ) b on a.department_id = b.department_id
+        and a.job_id = b.job_id
+        left join (
+            select
+                *
+            from
+                sums
+            where
+                qtr = 2
+        ) c on a.department_id = c.department_id
+        and a.job_id = c.job_id
+        left join (
+            select
+                *
+            from
+                sums
+            where
+                qtr = 3
+        ) d on a.department_id = d.department_id
+        and a.job_id = d.job_id
+        left join (
+            select
+                *
+            from
+                sums
+            where
+                qtr = 4
+        ) e on a.department_id = e.department_id
+        and a.job_id = e.job_id
 )
-select a.*,IFNULL(b.total, 0) as q1 from distincts a 
-left join (select * from sums where qtr=1) b on a.department_id=b.department_id and a.job_id=b.job_id
-;
+select
+    IFNULL(b.department, 'NA') as department,
+    IFNULL(c.job, 'NA') as job,
+    a.q1,
+    a.q2,
+    a.q3,
+    a.q4
+from
+    transpose a
+    left join mydatabase.departments b on a.department_id = b.id
+    left join mydatabase.jobs c on a.job_id = c.id
+order by
+    IFNULL(b.department, 'NA'),
+    IFNULL(c.job, 'NA');
